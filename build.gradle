@@ -1,0 +1,37 @@
+plugins {
+	id 'org.springframework.boot' version '2.5.7'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'java'
+}
+
+group = 'com.wellsfargo.hackathon'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+	implementation 'org.projectlombok:lombok:1.18.24'
+	implementation 'io.springfox:springfox-swagger2:2.9.2'
+	implementation 'io.springfox:springfox-swagger-ui:2.9.2'
+	implementation 'commons-beanutils:commons-beanutils:1.9.4'
+	
+	
+	implementation 'com.google.guava:guava:31.1-jre'
+	implementation 'org.threeten:threetenbp:1.6.0'
+	implementation 'com.google.http-client:google-http-client:1.41.7'
+	implementation 'com.google.cloud:google-cloud-texttospeech:2.2.1'
+	
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	
+	annotationProcessor 'org.projectlombok:lombok:1.18.24'
+}
+
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
