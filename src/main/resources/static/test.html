@@ -61,7 +61,7 @@
 </head>
 <body>
 <audio controls>
-  <source src="http://localhost:8080/api/pronunce/627b73196d433d10df0fe0c5" type="audio/ogg">
+  <source src="" type="audio/ogg">
 </audio>
 	<div id="viz">
 		<canvas id="analyser" width="1024" height="500"></canvas>
@@ -72,4 +72,14 @@
 		<a id="save" href="#"><img src="img/save.svg"></a>
 	</div>
 </body>
+<script>
+// One-liner to resume playback when user interacted with the page.
+
+document.querySelector('body').addEventListener('click', function() {
+	console.log('Playback resumed successfully');
+	audioContext.resume().then(() => {
+    console.log('Playback resumed successfully');
+  });
+});
+</script>
 </html>
