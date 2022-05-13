@@ -20,15 +20,18 @@ dependencies {
 	implementation 'io.springfox:springfox-swagger2:2.9.2'
 	implementation 'io.springfox:springfox-swagger-ui:2.9.2'
 	implementation 'commons-beanutils:commons-beanutils:1.9.4'
-//	implementation 'javax.validation:validation-api:2.0.1.Final'
+	implementation 'com.google.cloud:google-cloud-speech:2.2.1'
 	
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'com.okta.spring:okta-spring-boot-starter:2.1.1'
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+	implementation 'javax.validation:validation-api:2.0.1.Final'
+	
+//	implementation 'org.springframework.boot:spring-boot-starter-security'
+//	implementation 'com.okta.spring:okta-spring-boot-starter:2.1.1'
+//	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 	
 	
 	
-	
+	implementation platform('com.google.cloud:libraries-bom:25.2.0')
+	implementation 'com.google.cloud:google-cloud-speech'
 	implementation 'com.google.guava:guava:31.1-jre'
 	implementation 'org.threeten:threetenbp:1.6.0'
 	implementation 'com.google.http-client:google-http-client:1.41.7'
@@ -40,18 +43,7 @@ dependencies {
 }
 
 
-azurewebapp {
-    subscription = 'd8d3f55a-8679-4dad-bbe3-3b851100c78e'
-    resourceGroup = 'rg-CrossBorder'
-    appName = 'hackathon-pronunciation-tool'
-    pricingTier = 'B1' 
-    region = 'eastus' 
-    runtime {
-        os = 'Linux' 
-        webContainer = 'JAVA'
-        javaVersion = 'Java 11'
-    }
-}
+
 
 tasks.named('test') {
 	useJUnitPlatform()

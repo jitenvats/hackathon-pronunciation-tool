@@ -1,14 +1,10 @@
 package com.wellsfargo.hackathon.controller;
 
 import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Set;
 
-import javax.validation.ConstraintViolation;
 import javax.validation.Valid;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.bson.BsonBinarySubType;
@@ -31,6 +27,18 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import com.google.api.gax.rpc.ApiStreamObserver;
+import com.google.api.gax.rpc.BidiStreamingCallable;
+import com.google.cloud.speech.v1.RecognitionConfig;
+import com.google.cloud.speech.v1.RecognitionConfig.AudioEncoding;
+import com.google.cloud.speech.v1.SpeechClient;
+import com.google.cloud.speech.v1.SpeechRecognitionAlternative;
+import com.google.cloud.speech.v1.StreamingRecognitionConfig;
+import com.google.cloud.speech.v1.StreamingRecognitionResult;
+import com.google.cloud.speech.v1.StreamingRecognizeRequest;
+import com.google.cloud.speech.v1.StreamingRecognizeResponse;
+import com.google.common.util.concurrent.SettableFuture;
+import com.google.protobuf.ByteString;
 import com.wellsfargo.hackathon.exception.BadRequestException;
 import com.wellsfargo.hackathon.exception.ContentTypeException;
 import com.wellsfargo.hackathon.exception.ExternalSystemException;
@@ -63,14 +71,7 @@ public class PronunciationAPIController {
 		LOGGER.info("GOOGLE_APPLICATION_CREDENTIALS :" + System.getenv("GOOGLE_APPLICATION_CREDENTIALS"));
 		LOGGER.info("Requested Employee : {}", employee);
 		
-		ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
-		Validator validator = validatorFactory.getValidator();
 		
-		Set<ConstraintViolation<Object>> validationResult = validator.validate(employee);
-		
-		if(!validationResult.isEmpty()) {
-			throw new BadRequestException(validationResult.iterator().next().getMessage(), "E-0004");
-		}
 
 		EmployeeEntity entity = new EmployeeEntity();
 		try {BeanUtils.copyProperties(entity,employee);} 
@@ -84,6 +85,8 @@ public class PronunciationAPIController {
 	@ApiOperation(value = "Get Translated Employee Name Based on Employee ID", response = StreamingResponseBody.class)
 	public ResponseEntity<StreamingResponseBody> getPronunciation(@PathVariable("employeeId") String employeeId) throws Exception {
 		EmployeeEntity employee = employeeService.getEmployeeDetails(employeeId);
+		
+		
 		LOGGER.info("Employee : {}", employee);
 		StreamingResponseBody responseBody = response -> {response.write(employee.getPronunciation().getData());};
 
@@ -137,5 +140,6 @@ public class PronunciationAPIController {
 		return ResponseEntity.ok().body("After Authentication");
 
 	}
-
+	
+	
 }

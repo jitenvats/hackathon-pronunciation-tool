@@ -66,7 +66,7 @@ public class TranslationServiceImpl implements TranslationService {
 
 			VoiceSelectionParams voice = builder.build();
 
-			AudioConfig audioConfig = AudioConfig.newBuilder().setAudioEncoding(AudioEncoding.MP3).setSpeakingRate(speed).build();
+			AudioConfig audioConfig = AudioConfig.newBuilder().setAudioEncoding(AudioEncoding.LINEAR16).setSpeakingRate(speed).build();
 			LOGGER.info("Translating Employee Name ...");
 			SynthesizeSpeechResponse response = textToSpeechClient.synthesizeSpeech(input, voice, audioConfig);
 			LOGGER.info("Translation Completed");
@@ -132,5 +132,9 @@ public class TranslationServiceImpl implements TranslationService {
 			}
 		}
 	}
+	
+	
+	
+	
 
 }
