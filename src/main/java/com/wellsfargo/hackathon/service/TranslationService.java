@@ -10,6 +10,6 @@ import com.wellsfargo.hackathon.model.EmployeeEntity;
 import com.wellsfargo.hackathon.util.PronunciationType;
 
 public interface TranslationService {
-	public ByteString translateEmployeeName(String employeeName, PronunciationType pronunciationType, String language) throws ExternalSystemException;
+	public ByteString translateEmployeeName(String employeeName, PronunciationType pronunciationType, String language, long speed) throws ExternalSystemException;
 	public  List<String> listAllSupportedVoices() throws Exception;
 }

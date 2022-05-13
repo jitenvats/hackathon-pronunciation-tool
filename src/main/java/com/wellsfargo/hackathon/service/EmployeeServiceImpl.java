@@ -29,10 +29,10 @@ public class EmployeeServiceImpl implements EmployeeService {
 	}
 
 	@Override
-	public EmployeeResponse saveEmployee(EmployeeEntity employee, PronunciationType pronunciationType, String language, boolean translate) throws ExternalSystemException {
+	public EmployeeResponse saveEmployee(EmployeeEntity employee, PronunciationType pronunciationType, String language, boolean translate, long speed) throws ExternalSystemException {
 
 		if (translate) {
-			employee.setPronunciation(new Binary(BsonBinarySubType.BINARY, translationService.translateEmployeeName(employee.getEmployeeName(), pronunciationType, language).toByteArray()));
+			employee.setPronunciation(new Binary(BsonBinarySubType.BINARY, translationService.translateEmployeeName(employee.getEmployeeName(), pronunciationType, language, speed).toByteArray()));
 		}
 
 		EmployeeEntity savedEmployee = employeeRepository.save(employee);

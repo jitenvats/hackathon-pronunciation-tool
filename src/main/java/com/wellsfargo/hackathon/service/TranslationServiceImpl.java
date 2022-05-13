@@ -31,13 +31,14 @@ public class TranslationServiceImpl implements TranslationService {
 	private List<String> language = new ArrayList<String>();
 
 	@Override
-	public ByteString translateEmployeeName(String employeeName, PronunciationType pronunciationType, String language) throws ExternalSystemException {
+	public ByteString translateEmployeeName(String employeeName, PronunciationType pronunciationType, String language, long speed) throws ExternalSystemException {
 
 		LOGGER.info("Employee Name : {}", employeeName );
 		LOGGER.info("Pronunciation Type : {}", pronunciationType );
 		LOGGER.info("Input Language : {}", language );
 		
 		language = (null==language) ? "en-US" : language;
+		speed = (0.0 == speed)? 1 : speed;
 		
 		LOGGER.info("Translation Language : {}", language );
 		
@@ -65,7 +66,7 @@ public class TranslationServiceImpl implements TranslationService {
 
 			VoiceSelectionParams voice = builder.build();
 
-			AudioConfig audioConfig = AudioConfig.newBuilder().setAudioEncoding(AudioEncoding.MP3).build();
+			AudioConfig audioConfig = AudioConfig.newBuilder().setAudioEncoding(AudioEncoding.MP3).setSpeakingRate(speed).build();
 			LOGGER.info("Translating Employee Name ...");
 			SynthesizeSpeechResponse response = textToSpeechClient.synthesizeSpeech(input, voice, audioConfig);
 			LOGGER.info("Translation Completed");

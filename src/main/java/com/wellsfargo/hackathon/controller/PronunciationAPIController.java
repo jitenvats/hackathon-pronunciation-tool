@@ -2,6 +2,13 @@ package com.wellsfargo.hackathon.controller;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Valid;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.bson.BsonBinarySubType;
@@ -24,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import com.google.cloud.texttospeech.v1.Voice;
+import com.wellsfargo.hackathon.exception.BadRequestException;
 import com.wellsfargo.hackathon.exception.ContentTypeException;
 import com.wellsfargo.hackathon.exception.ExternalSystemException;
 import com.wellsfargo.hackathon.model.Employee;
@@ -52,15 +59,24 @@ public class PronunciationAPIController {
 
 	@PostMapping(value = "/translate", consumes = { MediaType.APPLICATION_JSON_VALUE }, produces = {MediaType.APPLICATION_JSON_VALUE })
 	@ApiOperation(value = "Translate Employee Name Based on Pronunciation Type and Language", response = EmployeeResponse.class)
-	public ResponseEntity<EmployeeResponse> translateName(@RequestBody Employee employee) throws ExternalSystemException {
+	public ResponseEntity<EmployeeResponse> translateName(@Valid @RequestBody Employee employee) throws ExternalSystemException, BadRequestException {
 		LOGGER.info("GOOGLE_APPLICATION_CREDENTIALS :" + System.getenv("GOOGLE_APPLICATION_CREDENTIALS"));
 		LOGGER.info("Requested Employee : {}", employee);
+		
+		ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
+		Validator validator = validatorFactory.getValidator();
+		
+		Set<ConstraintViolation<Object>> validationResult = validator.validate(employee);
+		
+		if(!validationResult.isEmpty()) {
+			throw new BadRequestException(validationResult.iterator().next().getMessage(), "E-0004");
+		}
 
 		EmployeeEntity entity = new EmployeeEntity();
 		try {BeanUtils.copyProperties(entity,employee);} 
 		catch (IllegalAccessException | InvocationTargetException e) {e.printStackTrace();}
 		
-		EmployeeResponse savedEmployee = employeeService.saveEmployee(entity, employee.getPronunciationType(), employee.getLanguage(), true);
+		EmployeeResponse savedEmployee = employeeService.saveEmployee(entity, employee.getPronunciationType(), employee.getLanguage(), true, employee.getSpeed());
 		return new ResponseEntity<EmployeeResponse>(savedEmployee, HttpStatus.CREATED);
 	}
 
@@ -89,7 +105,7 @@ public class PronunciationAPIController {
 		LOGGER.info("Employee : {}", employee);
 
 		employee.setPronunciation(new Binary(BsonBinarySubType.BINARY, document.getBytes()));
-		EmployeeResponse updatedEmployee = employeeService.saveEmployee(employee, null, null, false);
+		EmployeeResponse updatedEmployee = employeeService.saveEmployee(employee, null, null, false, 1);
 		return new ResponseEntity<EmployeeResponse>(updatedEmployee, HttpStatus.ACCEPTED);
 
 	}
@@ -107,6 +123,18 @@ public class PronunciationAPIController {
 	@ApiOperation(value = "Get Supported Language for Translation", response = StreamingResponseBody.class)
 	public ResponseEntity<List<String>> getSupportedLanguage() throws Exception {
 		return ResponseEntity.ok().body(translationService.listAllSupportedVoices());
+
+	}
+	
+	@GetMapping(value = "/hello", produces = { MediaType.APPLICATION_JSON_VALUE })
+	public ResponseEntity<String> getHello() throws Exception {
+		return ResponseEntity.ok().body("Hello World");
+
+	}
+	
+	@GetMapping(value = "/hello2", produces = { MediaType.APPLICATION_JSON_VALUE })
+	public ResponseEntity<String> getHello2() throws Exception {
+		return ResponseEntity.ok().body("After Authentication");
 
 	}
 

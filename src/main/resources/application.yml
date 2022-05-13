@@ -1,9 +1,18 @@
 ---
-spring:
+spring:          
   data:
     mongodb:
       host: localhost
       port: 27017
       database: employee-db
+  
+
+okta:
+  oauth2:
+    client-id: 0oa50rzdsevAhjivv5d7
+    client-secret: xgiCz1JPBTBr_XHD3xKiiKOfBeZBnIKREeBrKFx1
+    issuer:   https://dev-54813481.okta.com/oauth2/default
+    #rolesClaim: groups
+    
 
 
