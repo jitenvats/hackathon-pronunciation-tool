@@ -56,11 +56,11 @@ public class UserController {
 	}
 
 	@GetMapping(value = "/users",  produces = {MediaType.APPLICATION_JSON_VALUE })
-	@ApiOperation(value = "List of all Users", response = EmployeeResponse.class)
-	public ResponseEntity<UserProfile[]> users(@RequestParam("limit") Integer limit) throws ExternalSystemException, BadRequestException, URISyntaxException, JsonProcessingException {
+	@ApiOperation(value = "List of Users based on search param", response = EmployeeResponse.class)
+	public ResponseEntity<UserProfile[]> users(@RequestParam("search") String search) throws ExternalSystemException, BadRequestException, URISyntaxException, JsonProcessingException {
 		LOGGER.info("GOOGLE_APPLICATION_CREDENTIALS :" + System.getenv("GOOGLE_APPLICATION_CREDENTIALS"));
 
-		URI uri = new URI(oktaApiBaseUri+oktaUserEndPoint);
+		URI uri = new URI(oktaApiBaseUri+oktaUserEndPoint+"?search="+search);
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("Content-Type", "application/json");

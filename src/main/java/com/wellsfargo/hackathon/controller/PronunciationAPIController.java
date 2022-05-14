@@ -6,6 +6,8 @@ import java.util.List;
 
 import javax.validation.Valid;
 
+import com.wellsfargo.hackathon.handlers.UserProfileHandler;
+import com.wellsfargo.hackathon.model.UserProfile;
 import org.apache.commons.beanutils.BeanUtils;
 import org.bson.BsonBinarySubType;
 import org.bson.types.Binary;
@@ -58,11 +60,13 @@ public class PronunciationAPIController {
 	private static final Logger LOGGER = LoggerFactory.getLogger(PronunciationAPIController.class);
 	private EmployeeService employeeService;
 	private TranslationService translationService;
+	private UserProfileHandler userProfileHandler;
 
 	@Autowired
-	public PronunciationAPIController(EmployeeService employeeService, TranslationService translationService) {
+	public PronunciationAPIController(EmployeeService employeeService, TranslationService translationService, UserProfileHandler userProfileHandler) {
 		this.employeeService = employeeService;
-		this.translationService = translationService; 
+		this.translationService = translationService;
+		this.userProfileHandler = userProfileHandler;
 	}
 
 	@PostMapping(value = "/translate", consumes = { MediaType.APPLICATION_JSON_VALUE }, produces = {MediaType.APPLICATION_JSON_VALUE })
@@ -87,6 +91,26 @@ public class PronunciationAPIController {
 		EmployeeEntity employee = employeeService.getEmployeeDetails(employeeId);
 		
 		
+		LOGGER.info("Employee : {}", employee);
+		StreamingResponseBody responseBody = response -> {response.write(employee.getPronunciation().getData());};
+
+		return ResponseEntity.ok().body(responseBody);
+
+	}
+
+	@GetMapping(value = "/pronunce/{firstName}/{lastName}", produces = { MediaType.APPLICATION_OCTET_STREAM_VALUE })
+	@ApiOperation(value = "Get Translated Employee Name Based on firstName and lastName ", response = StreamingResponseBody.class)
+	public ResponseEntity<StreamingResponseBody> getPronunciation(@PathVariable("firstName") String firstName, @PathVariable("lastName") String lastName) throws Exception {
+
+		List<UserProfile> userProfileList = userProfileHandler.getProfileByName(firstName, lastName);
+
+		if(userProfileList.size() > 1 || userProfileList.size() == 0) {
+			return ResponseEntity.notFound().build();
+		}
+		UserProfile userProfile = userProfileList.get(0);
+		EmployeeEntity employee = employeeService.getEmployeeDetails(userProfile.getId());
+
+
 		LOGGER.info("Employee : {}", employee);
 		StreamingResponseBody responseBody = response -> {response.write(employee.getPronunciation().getData());};
 
