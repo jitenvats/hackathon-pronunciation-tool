@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
 	<meta name="viewport" content="width=device-width,initial-scale=1">
@@ -7,12 +7,58 @@
 	<script src="js/audiodisplay.js"></script>
 	<script src="js/recorderjs/recorder.js"></script>
 	<script src="js/main.js"></script>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js" ></script>
+<script>
+   $(document).ready(function() {
+      //$("div").click(function() {alert("Welcome to Tutorialspoint!");});
+  		$("#recordButton").click(function() {
+  			//alert("click");
+  	        $("#recordSection").toggle();
+  	    });
+  		
+//it will fetch employee id and populate src of audio control
+
+  	    $.ajax({
+  	        url: "http://localhost:8080/api/getEmployeeId"
+  	    }).then(function(data) {
+  	    	$("#audioDId").attr('src', "api/pronunce/"+data.employeeId);
+  	    	$("#empId").attr('value', data.employeeId);
+  	    });
+  		
+//it will be used to save recorded file
+
+  	  $(function(){
+  	    $('#uploadBTN').on('click', function(){ 
+  	        var formData = new FormData();
+  	      //let formData = new FormData(); 
+  	      formData.append("document", $("#document"));
+  	      formData.append("employeeId", $("#empId").attr('value'));
+  	    formData.append("name", "audio");
+  	      //alert($("#fileinfo"));
+  	      console.log($("#document"));
+  	        $.ajax({
+  	            url: 'api/pronunce/'+$("#empId").attr('value'),  
+  	            type: 'PUT',
+  	            data: formData,
+  	            success:function(data){
+  	                $('#output').html(data);
+  	            },
+  	            cache: false,
+  	            contentType: false,
+  	            processData: false
+  	        });
+  	    });
+  	});
+
+  		
+   });
+</script>
 	<style>
 	html { overflow: hidden; }
 	body { 
 		font: 14pt Arial, sans-serif; 
 		background: lightgrey;
-		display: flex;
+		/*display: flex;*/
 		flex-direction: column;
 		height: 100vh;
 		width: 100%;
@@ -24,10 +70,11 @@
 		width: 95%;
 		height: 45%;
 		box-shadow: 0px 0px 10px blue;
+		margin-top: 15px;
 	}
 	#controls {
 		display: flex;
-		flex-direction: row;
+		flex-direction: inherit;
 		align-items: center;
 		justify-content: space-around;
 		height: 20%;
@@ -40,12 +87,12 @@
 		background: -moz-radial-gradient(center, ellipse cover, #ff0000 0%,lightgrey 75%,lightgrey 100%,#7db9e8 100%); 
 		background: radial-gradient(center, ellipse cover, #ff0000 0%,lightgrey 75%,lightgrey 100%,#7db9e8 100%); 
 	}
-	#save, #save img { height: 10vh; }
+	#save, #save img { height: 13vh; }
 	#save { opacity: 0.25;}
 	#save[download] { opacity: 1;}
 	#viz {
 		height: 80%;
-		width: 100%;
+		width: 60%;
 		display: flex;
 		flex-direction: column;
 		justify-content: space-around;
@@ -53,33 +100,76 @@
 	}
 	@media (orientation: landscape) {
 		body { flex-direction: row;}
-		#controls { flex-direction: column; height: 100%; width: 10%;}
-		#viz { height: 100%; width: 90%;}
+		#controls { flex-direction: column; height: 100%; width: 20%;}
+		#viz { height: 100%; width: 60%;}
 	}
+.mainDiv{
+    background-color: #f11313;
+    font-size: xx-large;
+    font-weight: bolder;
+    width: 98%;
+    text-align: center;
+    margin: 6px;
+    padding: 7px;
+    height: 13%;
+}
 
+.secondDiv{
+    width: 98%;
+    text-align: center;
+    margin: 6px;
+    padding: 7px;
+
+}
 	</style>
 </head>
 <body>
+<input type="hidden" id="empId" value="111" />
+<div class="mainDiv">Name Pronunciation Page</div>
+<div class="secondDiv">
+<div style="float:left"><img src="img/profile-avatar.png"></div>
+<div style="pading: 2px 2px 2px 2px;">
+<label>Name:</label>
+Name will appear here
+</div>
+<div style="margin-top:10px;">
 <audio controls>
-  <source src="" type="audio/ogg">
+  <source id="audioDId" src="" type="audio/ogg">
 </audio>
-	<div id="viz">
-		<canvas id="analyser" width="1024" height="500"></canvas>
-		<canvas id="wavedisplay" width="1024" height="500"></canvas>
-	</div>
-	<div id="controls">
-		<img id="record" src="img/mic128.png" onclick="toggleRecording(this);">
-		<a id="save" href="#"><img src="img/save.svg"></a>
-	</div>
+</div>
+<div>
+<input id="recordButton" type="button" value="Record" />
+</div>
+
+
+<div id="recordSection" style="display:none;">
+<div id="viz" style="float:left;">
+	<div><canvas id="analyser" width="600" height="80"></canvas></div>
+	<div><canvas id="wavedisplay" width="600" height="80"></canvas></div>
+</div>
+<div id="controls" >
+<div><img id="record" src="img/mic128.png" onclick="toggleRecording(this);"></div>
+<div><a id="save" href="#"><img src="img/save.svg"></a></div>
+</div>
+</div>
+<form>
+<input id="document" name="document" type="file" accept="audio/*" />
+<input id="uploadBTN" type="button" value="Upload to Server" />
+</form>
+<div id="output"></div>
+
+</div>
+
 </body>
 <script>
-// One-liner to resume playback when user interacted with the page.
+	// One-liner to resume playback when user interacted with the page.
+	
+	document.querySelector('body').addEventListener('click', function() {
+		console.log('Playback resumed successfully');
+		audioContext.resume().then(() => {
+	    console.log('Playback resumed successfully');
+	  });
+	});
 
-document.querySelector('body').addEventListener('click', function() {
-	console.log('Playback resumed successfully');
-	audioContext.resume().then(() => {
-    console.log('Playback resumed successfully');
-  });
-});
 </script>
 </html>
