@@ -76,6 +76,26 @@ public class UserController {
 		return new ResponseEntity<UserProfile[] >(profiles, HttpStatus.OK);
 	}
 
+	@GetMapping(value = "/users/me",  produces = {MediaType.APPLICATION_JSON_VALUE })
+	@ApiOperation(value = "Get current user details", response = UserProfile.class)
+	public ResponseEntity<UserProfile> currentUserDetails() throws ExternalSystemException, BadRequestException, URISyntaxException, JsonProcessingException {
+		LOGGER.info("GOOGLE_APPLICATION_CREDENTIALS :" + System.getenv("GOOGLE_APPLICATION_CREDENTIALS"));
+
+		String endPoint = oktaApiBaseUri + oktaUserEndPoint + "/me" ;
+		URI uri = new URI(endPoint);
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("Content-Type", "application/json");
+		headers.set("Accept", "application/json");
+		//TODO : Get it from Spring Security Context
+		headers.set("Authorization", "SSWS 00UyT7qbp1Ak6Z2-UMjqxBO7owSIN5m2roynJJN3yD");
+
+		HttpEntity requestEntity = new HttpEntity<>(null, headers);
+		ResponseEntity<UserProfile> result = restTemplate.exchange(uri, HttpMethod.GET, requestEntity, UserProfile.class);
+		UserProfile profile = result.getBody();
+
+		return new ResponseEntity<UserProfile >(profile, HttpStatus.OK);
+	}
 
 	@GetMapping(value = "/users/{logIn}",  produces = {MediaType.APPLICATION_JSON_VALUE })
 	@ApiOperation(value = "Get user by login", response = UserProfile.class)
