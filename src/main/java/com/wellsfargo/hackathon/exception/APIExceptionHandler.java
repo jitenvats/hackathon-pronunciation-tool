@@ -52,6 +52,7 @@ public class APIExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR)
     public @ResponseBody ErrorResponse handleException(Exception ex) throws Exception {
+		ex.printStackTrace();
         ErrorResponse errorResponse = new ErrorResponse();
     	errorResponse.setErrorCode(HtmlUtils.htmlEscape("F-0002"));
         errorResponse.setMessage(HtmlUtils.htmlEscape("Server Error"));

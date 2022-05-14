@@ -1,39 +1,33 @@
 package com.wellsfargo.hackathon.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wellsfargo.hackathon.exception.BadRequestException;
-import com.wellsfargo.hackathon.exception.ContentTypeException;
-import com.wellsfargo.hackathon.exception.ExternalSystemException;
-import com.wellsfargo.hackathon.model.Employee;
-import com.wellsfargo.hackathon.model.EmployeeEntity;
-import com.wellsfargo.hackathon.model.EmployeeResponse;
-import com.wellsfargo.hackathon.model.UserProfile;
-import com.wellsfargo.hackathon.service.EmployeeService;
-import com.wellsfargo.hackathon.service.TranslationService;
-import io.swagger.annotations.ApiOperation;
-import org.apache.commons.beanutils.BeanUtils;
-import org.bson.BsonBinarySubType;
-import org.bson.types.Binary;
+import java.net.URI;
+import java.net.URISyntaxException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.*;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import javax.validation.*;
-import javax.websocket.server.PathParam;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.wellsfargo.hackathon.exception.BadRequestException;
+import com.wellsfargo.hackathon.exception.ExternalSystemException;
+import com.wellsfargo.hackathon.model.EmployeeResponse;
+import com.wellsfargo.hackathon.model.UserProfile;
+
+import io.swagger.annotations.ApiOperation;
 
 @RestController
 @RequestMapping("/api")

@@ -1,13 +1,10 @@
 package com.wellsfargo.hackathon.controller;
 
 import java.lang.reflect.InvocationTargetException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import javax.validation.Valid;
 
-import com.wellsfargo.hackathon.handlers.UserProfileHandler;
-import com.wellsfargo.hackathon.model.UserProfile;
 import org.apache.commons.beanutils.BeanUtils;
 import org.bson.BsonBinarySubType;
 import org.bson.types.Binary;
@@ -17,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,26 +28,17 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import com.google.api.gax.rpc.ApiStreamObserver;
-import com.google.api.gax.rpc.BidiStreamingCallable;
-import com.google.cloud.speech.v1.RecognitionConfig;
-import com.google.cloud.speech.v1.RecognitionConfig.AudioEncoding;
-import com.google.cloud.speech.v1.SpeechClient;
-import com.google.cloud.speech.v1.SpeechRecognitionAlternative;
-import com.google.cloud.speech.v1.StreamingRecognitionConfig;
-import com.google.cloud.speech.v1.StreamingRecognitionResult;
-import com.google.cloud.speech.v1.StreamingRecognizeRequest;
-import com.google.cloud.speech.v1.StreamingRecognizeResponse;
-import com.google.common.util.concurrent.SettableFuture;
-import com.google.protobuf.ByteString;
 import com.wellsfargo.hackathon.exception.BadRequestException;
 import com.wellsfargo.hackathon.exception.ContentTypeException;
 import com.wellsfargo.hackathon.exception.ExternalSystemException;
+import com.wellsfargo.hackathon.handlers.UserProfileHandler;
 import com.wellsfargo.hackathon.model.Employee;
 import com.wellsfargo.hackathon.model.EmployeeEntity;
 import com.wellsfargo.hackathon.model.EmployeeResponse;
+import com.wellsfargo.hackathon.model.UserProfile;
 import com.wellsfargo.hackathon.service.EmployeeService;
 import com.wellsfargo.hackathon.service.TranslationService;
+import com.wellsfargo.hackathon.util.PronunciationType;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -63,56 +53,80 @@ public class PronunciationAPIController {
 	private UserProfileHandler userProfileHandler;
 
 	@Autowired
-	public PronunciationAPIController(EmployeeService employeeService, TranslationService translationService, UserProfileHandler userProfileHandler) {
+	public PronunciationAPIController(EmployeeService employeeService, TranslationService translationService,
+			UserProfileHandler userProfileHandler) {
 		this.employeeService = employeeService;
 		this.translationService = translationService;
 		this.userProfileHandler = userProfileHandler;
 	}
 
-	@PostMapping(value = "/translate", consumes = { MediaType.APPLICATION_JSON_VALUE }, produces = {MediaType.APPLICATION_JSON_VALUE })
+	@PostMapping(value = "/translate", consumes = { MediaType.APPLICATION_JSON_VALUE }, produces = {
+			MediaType.APPLICATION_JSON_VALUE })
 	@ApiOperation(value = "Translate Employee Name Based on Pronunciation Type and Language", response = EmployeeResponse.class)
-	public ResponseEntity<EmployeeResponse> translateName(@Valid @RequestBody Employee employee) throws ExternalSystemException, BadRequestException {
+	public ResponseEntity<EmployeeResponse> translateName(@Valid @RequestBody Employee employee)
+			throws ExternalSystemException, BadRequestException {
 		LOGGER.info("GOOGLE_APPLICATION_CREDENTIALS :" + System.getenv("GOOGLE_APPLICATION_CREDENTIALS"));
 		LOGGER.info("Requested Employee : {}", employee);
-		
-		
 
 		EmployeeEntity entity = new EmployeeEntity();
-		try {BeanUtils.copyProperties(entity,employee);} 
-		catch (IllegalAccessException | InvocationTargetException e) {e.printStackTrace();}
-		
-		EmployeeResponse savedEmployee = employeeService.saveEmployee(entity, employee.getPronunciationType(), employee.getLanguage(), true, employee.getSpeed());
+		try {
+			BeanUtils.copyProperties(entity, employee);
+		} catch (IllegalAccessException | InvocationTargetException e) {
+			e.printStackTrace();
+		}
+
+		EmployeeResponse savedEmployee = employeeService.saveEmployee(entity, employee.getPronunciationType(),
+				employee.getLanguage(), true, employee.getSpeed());
 		return new ResponseEntity<EmployeeResponse>(savedEmployee, HttpStatus.CREATED);
 	}
 
 	@GetMapping(value = "/pronunce/{employeeId}", produces = { MediaType.APPLICATION_OCTET_STREAM_VALUE })
 	@ApiOperation(value = "Get Translated Employee Name Based on Employee ID", response = StreamingResponseBody.class)
-	public ResponseEntity<StreamingResponseBody> getPronunciation(@PathVariable("employeeId") String employeeId) throws Exception {
-		EmployeeEntity employee = employeeService.getEmployeeDetails(employeeId);
-		
-		
+	public ResponseEntity<StreamingResponseBody> getPronunciation(@PathVariable("employeeId") String employeeId,
+			Authentication auth) throws Exception {
+		EmployeeEntity employee = employeeService.getEmployeeDetailsWilNull(employeeId);
 		LOGGER.info("Employee : {}", employee);
-		StreamingResponseBody responseBody = response -> {response.write(employee.getPronunciation().getData());};
-
-		return ResponseEntity.ok().body(responseBody);
-
+		StreamingResponseBody responseBody = null;
+		if (employee == null) {
+			LOGGER.info("Employee Details not found in DB");
+			OAuth2AuthenticationToken token = (OAuth2AuthenticationToken) auth;
+			String employeeName = (String) token.getPrincipal().getAttributes().get("name");
+			LOGGER.info("Employee Name from  Authentication : {}", employeeName);
+			responseBody = response -> {
+				try {
+					response.write(translationService
+							.translateEmployeeName(employeeName, PronunciationType.MALE, null, 1).toByteArray());
+				} catch (ExternalSystemException e) {
+					e.printStackTrace();
+				}
+			};
+			return ResponseEntity.ok().body(responseBody);
+		} else {
+			LOGGER.info("Employee : {}", employee);
+			responseBody = response -> {
+				response.write(employee.getPronunciation().getData());
+			};
+			return ResponseEntity.ok().body(responseBody);
+		}
 	}
 
 	@GetMapping(value = "/pronunce/{firstName}/{lastName}", produces = { MediaType.APPLICATION_OCTET_STREAM_VALUE })
 	@ApiOperation(value = "Get Translated Employee Name Based on firstName and lastName ", response = StreamingResponseBody.class)
-	public ResponseEntity<StreamingResponseBody> getPronunciation(@PathVariable("firstName") String firstName, @PathVariable("lastName") String lastName) throws Exception {
+	public ResponseEntity<StreamingResponseBody> getPronunciation(@PathVariable("firstName") String firstName,
+			@PathVariable("lastName") String lastName) throws Exception {
 
 		List<UserProfile> userProfileList = userProfileHandler.getProfileByName(firstName, lastName);
 
-		if(userProfileList.size() > 1 || userProfileList.size() == 0) {
+		if (userProfileList.size() > 1 || userProfileList.size() == 0) {
 			return ResponseEntity.notFound().build();
 		}
 		UserProfile userProfile = userProfileList.get(0);
 		EmployeeEntity employee = employeeService.getEmployeeDetails(userProfile.getId());
 
-
 		LOGGER.info("Employee : {}", employee);
-		StreamingResponseBody responseBody = response -> {response.write(employee.getPronunciation().getData());};
+		StreamingResponseBody responseBody = response -> {
+			response.write(employee.getPronunciation().getData());
+		};
 
 		return ResponseEntity.ok().body(responseBody);
 
@@ -120,9 +134,10 @@ public class PronunciationAPIController {
 
 	@PutMapping(value = "/pronunce/{employeeId}", produces = { MediaType.APPLICATION_JSON_VALUE })
 	@ApiOperation(value = "Update Custom Employee Name Pronunciation Based on Employee ID", response = EmployeeResponse.class)
-	public ResponseEntity<EmployeeResponse> updatePronunciation(@PathVariable("employeeId") String employeeId, @RequestPart MultipartFile document) throws Exception {
+	public ResponseEntity<EmployeeResponse> updatePronunciation(@PathVariable("employeeId") String employeeId,
+			@RequestPart MultipartFile document) throws Exception {
 
-		LOGGER.info("File Type : {}" , document.getContentType());
+		LOGGER.info("File Type : {}", document.getContentType());
 
 		if (!document.getContentType().startsWith(AUDIO_CONTENT_TYPE)) {
 			throw new ContentTypeException("Not a Valid Audio File", "E-0002");
@@ -140,30 +155,33 @@ public class PronunciationAPIController {
 	@DeleteMapping(value = "/pronunce/{employeeId}", produces = { MediaType.APPLICATION_JSON_VALUE })
 	@ApiOperation(value = "Delete Employee and Name Pronunciation Based on Employee ID", response = Void.class)
 	public ResponseEntity<Void> deletePronunciation(@PathVariable("employeeId") String employeeId) throws Exception {
-		LOGGER.info("Deleting Employee : {}" , employeeId);
+		LOGGER.info("Deleting Employee : {}", employeeId);
 		employeeService.deleteEmployee(employeeId);
 		return ResponseEntity.noContent().build();
 
 	}
-	
+
 	@GetMapping(value = "/language", produces = { MediaType.APPLICATION_JSON_VALUE })
 	@ApiOperation(value = "Get Supported Language for Translation", response = StreamingResponseBody.class)
 	public ResponseEntity<List<String>> getSupportedLanguage() throws Exception {
 		return ResponseEntity.ok().body(translationService.listAllSupportedVoices());
 
 	}
-	
+
 	@GetMapping(value = "/hello", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> getHello() throws Exception {
 		return ResponseEntity.ok().body("Hello World");
 
 	}
-	
+
 	@GetMapping(value = "/hello2", produces = { MediaType.APPLICATION_JSON_VALUE })
-	public ResponseEntity<String> getHello2() throws Exception {
-		return ResponseEntity.ok().body("After Authentication");
+	public ResponseEntity<String> getHello2(Authentication auth) throws Exception {
+
+		OAuth2AuthenticationToken token = (OAuth2AuthenticationToken) auth;
+
+		System.out.println("principle:" + auth.toString());
+		return ResponseEntity.ok().body("After Authentication :" + token.getPrincipal().getAttributes().get("name"));
 
 	}
-	
-	
+
 }
