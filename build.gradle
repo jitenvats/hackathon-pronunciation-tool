@@ -40,7 +40,7 @@ dependencies {
 }
 
 
-/*azurewebapp {
+azurewebapp {
     subscription = 'd8d3f55a-8679-4dad-bbe3-3b851100c78e'
     resourceGroup = 'rg-CrossBorder'
     appName = 'hackathon-pronunciation-tool'
@@ -51,7 +51,7 @@ dependencies {
         webContainer = 'JAVA'
         javaVersion = 'Java 11'
     }
-}*/
+}
 
 tasks.named('test') {
 	useJUnitPlatform()

@@ -18,5 +18,7 @@ public class EmployeeEntity {
 	private String employeeName;
 		
 	private Binary pronunciation;
+	
+	private String phonetic;
 
 }
