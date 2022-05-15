@@ -3,7 +3,12 @@
 <head>
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>Audio Recorder</title>
-
+<script>  
+//global variables
+var globalBlob;  
+var globalFileName;
+}  
+</script>
 	<script src="js/audiodisplay.js"></script>
 	<script src="js/recorderjs/recorder.js"></script>
 	<script src="js/main.js"></script>
@@ -34,8 +39,10 @@
   	  $(function(){
   	    $('#uploadBTN').on('click', function(){ 
   	      // Get form
-  	      var form = $('#fileUploadForm')[0];
-  	      var data = new FormData(form);
+  	      //var form = $('#fileUploadForm')[0];
+  	      //var data = new FormData(form);
+  	      var data = new FormData();
+  	      data.append("file", globalBlob , globalFileName)
   	      data.append("employeeId", $("#empId").attr('value'));
   	      
   	      $.ajax({
@@ -49,6 +56,8 @@
   	          timeout: 600000,
   	          success: function (data) {  	        	  
   	        		$('#output').html(data);
+  	        		globalBlob = null;
+  	        		globalFileName = null;
   	          },
   	          error: function (e) {
   	              $("#output").text(e.responseText);

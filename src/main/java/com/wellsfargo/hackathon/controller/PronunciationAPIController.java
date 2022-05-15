@@ -139,6 +139,8 @@ public class PronunciationAPIController {
 			@RequestParam("file") MultipartFile document) throws Exception {
 
 		LOGGER.info("File Type : {}", document.getContentType());
+		LOGGER.info("File name : {}", document.getName());
+		LOGGER.info("File size : {}", String.valueOf(document.getSize()));
 
 		if (!document.getContentType().startsWith(AUDIO_CONTENT_TYPE)) {
 			throw new ContentTypeException("Not a Valid Audio File", "E-0002");
