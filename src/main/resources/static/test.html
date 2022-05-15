@@ -9,7 +9,9 @@
 	<script src="js/main.js"></script>
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js" ></script>
 <script>
+
    $(document).ready(function() {
+	   
       //$("div").click(function() {alert("Welcome to Tutorialspoint!");});
   		$("#recordButton").click(function() {
   			//alert("click");
@@ -19,35 +21,47 @@
 //it will fetch employee id and populate src of audio control
 
   	    $.ajax({
-  	        url: "http://localhost:8080/api/getEmployeeId"
+  	        url: "http://localhost:8080/api//users/me"
   	    }).then(function(data) {
-  	    	$("#audioDId").attr('src', "api/pronunce/"+data.employeeId);
-  	    	$("#empId").attr('value', data.employeeId);
+  	    	$("#audioDId").attr('src', "api/pronunce/"+data.id);//assuming id is employeeId
+  	    	$("#empId").attr('value', data.id);
+  	    	$("#empName").attr('value', data.profile.firstName+" "+data.profile.lastName);
+  	    	$("#empEmail").attr('value', data.profile.email);
   	    });
   		
 //it will be used to save recorded file
 
   	  $(function(){
   	    $('#uploadBTN').on('click', function(){ 
-  	        var formData = new FormData();
-  	      //let formData = new FormData(); 
-  	      formData.append("document", $("#document"));
-  	      formData.append("employeeId", $("#empId").attr('value'));
-  	    formData.append("name", "audio");
-  	      //alert($("#fileinfo"));
-  	      console.log($("#document"));
-  	        $.ajax({
-  	            url: 'api/pronunce/'+$("#empId").attr('value'),  
-  	            type: 'PUT',
-  	            data: formData,
-  	            success:function(data){
-  	                $('#output').html(data);
-  	            },
-  	            cache: false,
-  	            contentType: false,
-  	            processData: false
-  	        });
+  	      // Get form
+  	      var form = $('#fileUploadForm')[0];
+  	      var data = new FormData(form);
+  	      data.append("employeeId", $("#empId").attr('value'));
+  	      
+  	      $.ajax({
+  	          type: "PUT",
+  	          enctype: 'multipart/form-data',
+  	          url: 'api/pronunce/'+$("#empId").attr('value'),
+  	          data: data,
+  	          processData: false, //prevent jQuery from automatically transforming the data into a query string
+  	          contentType: false,
+  	          cache: false,
+  	          timeout: 600000,
+  	          success: function (data) {  	        	  
+  	        		$('#output').html(data);
+  	          },
+  	          error: function (e) {
+  	              $("#output").text(e.responseText);
+  	              console.log("ERROR : ", e);
+
+  	          },
+  	        	cache: false,
+	            contentType: false,
+	            processData: false
+  	      });
   	    });
+  	    
+  	    
   	});
 
   		
@@ -129,8 +143,8 @@
 <div class="secondDiv">
 <div style="float:left"><img src="img/profile-avatar.png"></div>
 <div style="pading: 2px 2px 2px 2px;">
-<label>Name:</label>
-Name will appear here
+<label>Name:</label><div id="empName"></div>
+<label>Email:</label><div id="empEmail"></div>
 </div>
 <div style="margin-top:10px;">
 <audio controls>
@@ -152,8 +166,9 @@ Name will appear here
 <div><a id="save" href="#"><img src="img/save.svg"></a></div>
 </div>
 </div>
-<form>
-<input id="document" name="document" type="file" accept="audio/*" />
+
+<form  method="POST" enctype="multipart/form-data" id="fileUploadForm">
+<input id="audioDocument" name="file" type="file" accept="audio/*" />
 <input id="uploadBTN" type="button" value="Upload to Server" />
 </form>
 <div id="output"></div>

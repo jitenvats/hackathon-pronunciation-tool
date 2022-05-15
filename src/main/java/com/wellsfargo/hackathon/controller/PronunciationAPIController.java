@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -135,7 +136,7 @@ public class PronunciationAPIController {
 	@PutMapping(value = "/pronunce/{employeeId}", produces = { MediaType.APPLICATION_JSON_VALUE })
 	@ApiOperation(value = "Update Custom Employee Name Pronunciation Based on Employee ID", response = EmployeeResponse.class)
 	public ResponseEntity<EmployeeResponse> updatePronunciation(@PathVariable("employeeId") String employeeId,
-			@RequestPart MultipartFile document) throws Exception {
+			@RequestParam("file") MultipartFile document) throws Exception {
 
 		LOGGER.info("File Type : {}", document.getContentType());
 
